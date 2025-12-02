@@ -11,6 +11,7 @@ const perBrowserManifest: Record<string, Record<number, UserManifest>> = {
         "sidePanel",
         "scripting",
         "activeTab",
+        "offscreen",
       ],
       commands: {
         "speak-selection": {

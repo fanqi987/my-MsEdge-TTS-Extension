@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { Button, CssBaseline, TextField } from '@mui/material';
+import { Button, ButtonGroup, CssBaseline, TextField } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
 import Grid from '@mui/material/Grid';
 import SnackbarAlert from '@/assets/components/SnackbarAlert';
 import SelectAutocomplete from '@/assets/components/SelectAutocomplete';
@@ -229,7 +231,7 @@ function App() {
                         maxRows={20}
                     />
                 </Grid>
-                <Grid size={1}>
+                <Grid size={1} container spacing={2}>
                     <Button
                         variant='contained'
                         sx={{ padding: '.75rem' }}
@@ -243,6 +245,49 @@ function App() {
                 <Grid size={1}>
                     <audio src={audioUrl} autoPlay controls style={{ width: '100%' }}></audio>
                 </Grid>
+                <Grid size={1}>
+                    <Button
+                        variant='contained'
+                        sx={{ padding: '.75rem' }}
+                        disabled={audioLoading || !audioUrl}
+                        fullWidth
+                        onClick={async () =>  {
+                            try{
+                                await browser.runtime.sendMessage({
+                                    type: 'PLAY_TTS_REQUEST',
+                                    audioUrl,
+                                });
+                            } catch (e) {
+                                console.error('Error sending message to background script:', e);
+                            }
+                        }}
+                    >
+                        Play In Background
+                    </Button>
+                </Grid>
+                <ButtonGroup variant="outlined" aria-label="Basic button group" fullWidth>
+                    <Button
+                      variant='outlined'
+                      fullWidth
+                      onClick={() => browser.runtime.sendMessage({ type: 'BG_AUDIO_SEEK_REL', seconds: -5 })}
+                    >
+                      -5s
+                    </Button>
+                    <Button
+                      variant='outlined'
+                      fullWidth
+                      onClick={() => browser.runtime.sendMessage({ type: 'BG_AUDIO_TOGGLE' })}
+                    >
+                      <PlayArrowIcon /> / <StopIcon />
+                    </Button>
+                    <Button
+                      variant='outlined'
+                      fullWidth
+                      onClick={() => browser.runtime.sendMessage({ type: 'BG_AUDIO_SEEK_REL', seconds: 5 })}
+                    >
+                      +5s
+                    </Button>
+                </ButtonGroup>
             </Grid>
             <SnackbarAlert open={alertState.open} alert={alertState.alert} onClose={handleClose} />
         </>
