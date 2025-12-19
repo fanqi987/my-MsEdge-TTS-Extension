@@ -43,8 +43,8 @@ See [cloudflare-worker/README.md](cloudflare-worker/README.md) for details.
 
 ## Installation
 ### - Mozilla / Chrome Web Store
-- [Chrome Web Store](https://chrome.google.com/webstore/detail/oajalfneblkfiejoadecnmodfpnaeblh) *(may be outdated)*
-- [Mozilla Addons](https://addons.mozilla.org/en-US/firefox/addon/ms-edge-tts-text-to-speech/) *(may be outdated)*
+- [Chrome Web Store](https://chrome.google.com/webstore/detail/oajalfneblkfiejoadecnmodfpnaeblh) 
+- [Mozilla Addons](https://addons.mozilla.org/en-US/firefox/addon/ms-edge-tts-text-to-speech/) 
 ### - Manual Installation
 1. Clone this repository and run `npm i`.
 2. **Deploy the Cloudflare Worker proxy** (see above).
