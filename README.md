@@ -14,17 +14,46 @@ This is a Text-to-Speech browser extension that uses MS Edge Online TTS service.
 - User-friendly interface
 - Language and country autocomplete for fast search
 
+## ⚠️ Important: API Fix Required (December 2024)
+
+Microsoft recently tightened their API security, requiring a specific Origin header that browsers cannot set. This fix uses a Cloudflare Worker as a proxy.
+
+### Quick Setup
+
+1. **Deploy the proxy** (free, takes 2 minutes):
+   ```bash
+   npm install -g wrangler
+   wrangler login
+   cd cloudflare-worker && wrangler deploy
+   ```
+   You'll get a URL like `https://msedge-tts-proxy.YOUR_USERNAME.workers.dev`
+
+2. **Configure the extension**:
+   Edit `assets/custom hooks/useTTS.tsx` and replace `YOUR_USERNAME` with your Cloudflare username.
+
+3. **Build and install**:
+   ```bash
+   npm install
+   npm run build
+   ```
+
+See [cloudflare-worker/README.md](cloudflare-worker/README.md) for details.
+
+---
+
 ## Installation
 ### - Mozilla / Chrome Web Store
-- [Chrome Web Store](https://chrome.google.com/webstore/detail/oajalfneblkfiejoadecnmodfpnaeblh)
-- [Mozilla Addons](https://addons.mozilla.org/en-US/firefox/addon/ms-edge-tts-text-to-speech/)
+- [Chrome Web Store](https://chrome.google.com/webstore/detail/oajalfneblkfiejoadecnmodfpnaeblh) *(may be outdated)*
+- [Mozilla Addons](https://addons.mozilla.org/en-US/firefox/addon/ms-edge-tts-text-to-speech/) *(may be outdated)*
 ### - Manual Installation
 1. Clone this repository and run `npm i`.
-2. Run `npm run build` for Chrome, `npm run build:firefox` for Firefox.
-3. Open your browser's extension settings.
-4. Enable developer mode.
-5. Click on "Load unpacked" and select the extension folder.
-6. The extension should now be installed and ready to use.
+2. **Deploy the Cloudflare Worker proxy** (see above).
+3. Update `PROXY_URL` in `assets/custom hooks/useTTS.tsx`.
+4. Run `npm run build` for Chrome, `npm run build:firefox` for Firefox.
+5. Open your browser's extension settings.
+6. Enable developer mode.
+7. Click on "Load unpacked" and select the `.output/chrome-mv3` folder.
+8. The extension should now be installed and ready to use.
 
 ## Screenshots
 ![MsEdge_TTS_Screenshot_1.png](/screenshots/MsEdge_TTS_Screenshot_1.png)
