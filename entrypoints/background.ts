@@ -1,28 +1,5 @@
 import { storage } from "#imports";
 
-let bgAudio: HTMLAudioElement | null = null;
-
-function isChromeWithOffscreen(): boolean {
-  return typeof chrome !== 'undefined' &&
-         !!chrome.offscreen &&
-         typeof chrome.offscreen.createDocument === 'function';
-}
-
-async function ensureOffscreenDocument() {
-  if (!isChromeWithOffscreen()) return; // no-op on Firefox
-
-  const offscreenUrl = chrome.runtime.getURL('offscreen.html');
-
-  const exists = await chrome.offscreen.hasDocument?.();
-  if (exists) return;
-
-  await chrome.offscreen.createDocument({
-    url: offscreenUrl,
-    reasons: ['AUDIO_PLAYBACK'],
-    justification: 'Play TTS audio in background while popup is closed',
-  });
-}
-
 export default defineBackground({
   type: 'module',
   main: () => {
@@ -36,6 +13,18 @@ export default defineBackground({
           "contexts": ["selection"]
         });
       });
+
+      const currentVersion = browser.runtime.getManifest().version;
+      const lastShownVersionItem = storage.defineItem<string>("local:lastShownVersion");
+      const lastShownVersion = await lastShownVersionItem.getValue();
+
+      if (currentVersion !== lastShownVersion) {
+        await browser.tabs.create({
+          url: browser.runtime.getURL('/update.html'),
+          active: true
+        });
+        await lastShownVersionItem.setValue(currentVersion);
+      }
     };
 
     browser.runtime.onInstalled.addListener(onInstalled);
@@ -48,95 +37,51 @@ export default defineBackground({
       textStorage.setValue(text);
     };
 
-    const openUI = async (tab: Browser.tabs.Tab, useSidePanel?: boolean) => {
-      if (import.meta.env.CHROME) {
-        if (useSidePanel) {
-          browser.sidePanel.open({ tabId: tab.id! });
-        }
-        else {
-          browser.action.openPopup();
-        }
+    // Find existing TTS reader tab by pinging it
+    const findReaderTabId = async (): Promise<number | null> => {
+      try {
+        const response = await browser.runtime.sendMessage("PING_READER");
+        return response?.tabId || null;
+      } catch (e) {
+        return null;
       }
-      else if (import.meta.env.FIREFOX) {
-        // @ts-ignore
-        browser.browserAction.openPopup();
+    };
+
+    // Open or reuse the TTS reader tab
+    const openReaderTab = async () => {
+      const existingTabId = await findReaderTabId();
+      
+      if (existingTabId) {
+        // Tab exists, no need to create a new one - the text watcher in the app will handle it
+        return;
       }
-    }
+
+      // Create a new reader tab (active for autoplay to work)
+      const readerUrl = browser.runtime.getURL('/reader.html');
+      await browser.tabs.create({
+        url: readerUrl,
+        active: true
+      });
+    };
 
     // Handle context menu clicks
     browser.contextMenus.onClicked.addListener(async (clickData, tab) => {
       if (clickData.menuItemId != "edgetts" || !clickData.selectionText) return;
-      // TODO: add user preference for side panel or popup
-      openUI(tab!, true);
+      
       await handleTextToSpeech(clickData.selectionText);
+      await openReaderTab();
     });
 
     // Handle keyboard shortcut
     browser.commands.onCommand.addListener(async (command, tab) => {
       if (command === "speak-selection") {
-        // TODO: add user preference for side panel or popup
-        openUI(tab, false);
         const [{ result: text }] = await browser.scripting.executeScript({
           target: { tabId: tab.id! },
           func: () => window.getSelection()?.toString() || ""
         });
         if (text) {
-          handleTextToSpeech(text);
-        }
-      }
-    });
-
-    browser.runtime.onMessage.addListener((message, sender) => {
-      if (message.type === 'PLAY_TTS_REQUEST' && message.audioUrl) {
-        // Chrome MV3: use offscreen document
-        if (import.meta.env.CHROME && isChromeWithOffscreen()) {
-          (async () => {
-            try {
-              await ensureOffscreenDocument();
-
-              chrome.runtime.sendMessage(
-                { type: 'PLAY_TTS_BACKGROUND', audioUrl: message.audioUrl },
-                () => {
-                  const err = chrome.runtime.lastError;
-                  if (err && err.message?.includes('Could not establish connection')) {
-                    console.warn('No offscreen receiver for PLAY_TTS_BACKGROUND:', err.message);
-                  }
-                },
-              );
-            } catch (error) {
-              console.error('Background: failed to forward to offscreen', error);
-            }
-          })();
-          return;
-        }
-
-        // Firefox MV2 (no offscreen): just play directly here
-        if (import.meta.env.FIREFOX) {
-          try {
-            if (bgAudio) {
-              bgAudio.pause();
-            }
-            bgAudio = new Audio(message.audioUrl);
-            bgAudio.play().catch(err => {
-              console.error('Firefox: error playing audio in background', err);
-            });
-          } catch (err) {
-            console.error('Firefox: failed to start background audio', err);
-          }
-        }
-      }
-
-      // NEW: simple transport controls for Firefox background audio
-       if (import.meta.env.FIREFOX && bgAudio) {
-        if (message.type === 'BG_AUDIO_TOGGLE') {
-          if (bgAudio.paused) {
-            bgAudio.play().catch(err => console.error('Firefox: play failed', err));
-          } else {
-            bgAudio.pause();
-          }
-        } else if (message.type === 'BG_AUDIO_SEEK_REL') {
-          const delta = message.seconds as number;
-          bgAudio.currentTime = Math.max(0, bgAudio.currentTime + delta);
+          await handleTextToSpeech(text);
+          await openReaderTab();
         }
       }
     });

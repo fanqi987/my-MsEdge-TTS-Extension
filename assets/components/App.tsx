@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { Button, ButtonGroup, CssBaseline, TextField } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import StopIcon from '@mui/icons-material/Stop';
+import { Button, CssBaseline, TextField, Accordion, AccordionSummary, AccordionDetails, Typography, Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SnackbarAlert from '@/assets/components/SnackbarAlert';
 import SelectAutocomplete from '@/assets/components/SelectAutocomplete';
+import CustomSlider from '@/assets/components/CustomSlider';
 import useFetch from '@/assets/custom hooks/useFetch';
 import useTTS from '@/assets/custom hooks/useTTS';
 import { storage } from '#imports';
@@ -121,6 +121,11 @@ function App() {
         setIsDrawerOpen(open);
     };
 
+    const handleOpenReader = () => {
+        const readerUrl = browser.runtime.getURL('/reader.html');
+        browser.tabs.create({ url: readerUrl, active: true });
+    };
+
     const handleChange = (value: string, type: string) => {
         if (!value) return;
 
@@ -207,18 +212,113 @@ function App() {
     return (
         <>
             <CssBaseline />
-            <TemporaryDrawer open={isDrawerOpen} toggleDrawer={toggleDrawer} settings={settings} handleSliderChange={handleSliderChange} />
-            <ButtonAppBar menuClick={() => toggleDrawer(true)} toggleColorMode={colorMode.toggleColorMode} colorMode={theme.palette.mode} />
+            <TemporaryDrawer open={isDrawerOpen} toggleDrawer={toggleDrawer} />
+            <ButtonAppBar 
+                menuClick={() => toggleDrawer(true)} 
+                toggleColorMode={colorMode.toggleColorMode} 
+                colorMode={theme.palette.mode}
+                onOpenReader={handleOpenReader}
+            />
             <Grid container margin={1} rowSpacing={2} columns={1}>
+                {/* Voice Configuration Accordion */}
                 <Grid size={1}>
-                    <SelectAutocomplete options={languages} label="Language" loading={voicesLoading} value={voiceState.language} onChange={(e: any, value: string) => handleChange(value, 'select_language')} />
+                    <Accordion 
+                        defaultExpanded={false}
+                        sx={{
+                            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                            boxShadow: 'none',
+                            borderRadius: '8px !important',
+                            '&:before': {
+                                display: 'none',
+                            },
+                        }}
+                    >
+                        <AccordionSummary
+                            expandIcon={<ExpandMoreIcon />}
+                            sx={{
+                                borderRadius: '8px',
+                                '& .MuiAccordionSummary-content': {
+                                    my: 1,
+                                },
+                            }}
+                        >
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Voice Configuration
+                            </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+                            <Grid container spacing={2}>
+                                {/* Voice Selection */}
+                                <Grid size={12}>
+                                    <Typography variant="body2" sx={{ mb: 1.5, fontWeight: 600, color: 'text.secondary' }}>
+                                        Voice Selection
+                                    </Typography>
+                                    <Grid container spacing={2}>
+                                        <Grid size={12}>
+                                            <SelectAutocomplete 
+                                                options={languages} 
+                                                label="Language" 
+                                                loading={voicesLoading} 
+                                                value={voiceState.language} 
+                                                onChange={(e: any, value: string) => handleChange(value, 'select_language')} 
+                                            />
+                                        </Grid>
+                                        <Grid size={12}>
+                                            <SelectAutocomplete 
+                                                options={countries} 
+                                                label="Country" 
+                                                value={voiceState.country} 
+                                                onChange={(e: any, value: string) => handleChange(value, 'select_country')} 
+                                                isDisabled={!voiceState.language.length} 
+                                            />
+                                        </Grid>
+                                        <Grid size={12}>
+                                            <SelectAutocomplete 
+                                                options={Object.keys(voices)} 
+                                                label="Voice" 
+                                                value={voiceState.voice && voiceState.voice.name} 
+                                                onChange={(e: any, value: string) => handleChange(voices[value], 'select_voice')} 
+                                                isDisabled={!voiceState.country.length} 
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+
+                                {/* Voice Settings */}
+                                <Grid size={12}>
+                                    <Typography variant="body2" sx={{ mb: 1.5, mt: 1, fontWeight: 600, color: 'text.secondary' }}>
+                                        Voice Settings
+                                    </Typography>
+                                    <Grid container spacing={2}>
+                                        <Grid size={12}>
+                                            <CustomSlider 
+                                                value={settings.rate} 
+                                                labels={['Slow', 'Default', 'Fast']} 
+                                                min={-50} 
+                                                max={50} 
+                                                defaultValue={0} 
+                                                label='Rate' 
+                                                onChange={(e: any, value: number) => handleSliderChange(value, 'set_rate')} 
+                                            />
+                                        </Grid>
+                                        <Grid size={12}>
+                                            <CustomSlider 
+                                                value={settings.pitch} 
+                                                labels={['Low', 'Default', 'High']} 
+                                                min={-50} 
+                                                max={50} 
+                                                defaultValue={0} 
+                                                label='Pitch' 
+                                                onChange={(e: any, value: number) => handleSliderChange(value, 'set_pitch')} 
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </AccordionDetails>
+                    </Accordion>
                 </Grid>
-                <Grid size={1}>
-                    <SelectAutocomplete options={countries} label="Country" value={voiceState.country} onChange={(e: any, value: string) => handleChange(value, 'select_country')} isDisabled={!voiceState.language.length} />
-                </Grid>
-                <Grid size={1}>
-                    <SelectAutocomplete options={Object.keys(voices)} label="Voice" value={voiceState.voice && voiceState.voice.name} onChange={(e: any, value: string) => handleChange(voices[value], 'select_voice')} isDisabled={!voiceState.country.length} />
-                </Grid>
+
                 <Grid size={1}>
                     <TextField
                         value={text}
@@ -245,49 +345,6 @@ function App() {
                 <Grid size={1}>
                     <audio src={audioUrl} autoPlay controls style={{ width: '100%' }}></audio>
                 </Grid>
-                <Grid size={1}>
-                    <Button
-                        variant='contained'
-                        sx={{ padding: '.75rem' }}
-                        disabled={audioLoading || !audioUrl}
-                        fullWidth
-                        onClick={async () =>  {
-                            try{
-                                await browser.runtime.sendMessage({
-                                    type: 'PLAY_TTS_REQUEST',
-                                    audioUrl,
-                                });
-                            } catch (e) {
-                                console.error('Error sending message to background script:', e);
-                            }
-                        }}
-                    >
-                        Play In Background
-                    </Button>
-                </Grid>
-                <ButtonGroup variant="outlined" aria-label="Basic button group" fullWidth>
-                    <Button
-                      variant='outlined'
-                      fullWidth
-                      onClick={() => browser.runtime.sendMessage({ type: 'BG_AUDIO_SEEK_REL', seconds: -5 })}
-                    >
-                      -5s
-                    </Button>
-                    <Button
-                      variant='outlined'
-                      fullWidth
-                      onClick={() => browser.runtime.sendMessage({ type: 'BG_AUDIO_TOGGLE' })}
-                    >
-                      <PlayArrowIcon /> / <StopIcon />
-                    </Button>
-                    <Button
-                      variant='outlined'
-                      fullWidth
-                      onClick={() => browser.runtime.sendMessage({ type: 'BG_AUDIO_SEEK_REL', seconds: 5 })}
-                    >
-                      +5s
-                    </Button>
-                </ButtonGroup>
             </Grid>
             <SnackbarAlert open={alertState.open} alert={alertState.alert} onClose={handleClose} />
         </>
