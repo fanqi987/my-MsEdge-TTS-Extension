@@ -1,12 +1,10 @@
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import Divider from '@mui/material/Divider';
-import { IconButton, Link, Stack, Typography } from '@mui/material';
+import { IconButton, Link, Typography } from '@mui/material';
 import { ArrowBackIosNew, GitHub } from '@mui/icons-material';
-import CustomSlider from './CustomSlider';
 
 export default function TemporaryDrawer(props: any) {
-    const { open, toggleDrawer, settings, handleSliderChange } = props;
+    const { open, toggleDrawer } = props;
 
     const DrawerContent = (
         <Box>
@@ -19,34 +17,30 @@ export default function TemporaryDrawer(props: any) {
             >
                 <ArrowBackIosNew />
             </IconButton>
-            <Typography sx={{ position: 'fixed', top: '6%', left: '50%', transform: 'translate(-50%, -50%)' }} variant='h6'>Additional Settings</Typography>
-            <Stack spacing={2} sx={{ mx: 2 }}>
-                <CustomSlider value={settings.rate} labels={['Slow', 'Default', 'Fast']} min={-50} max={50} defaultValue={0} label='Rate' onChange={(e: any, value: number) => handleSliderChange(value, 'set_rate')} />
-                <CustomSlider value={settings.pitch} labels={['Low', 'Default', 'High']} min={-50} max={50} defaultValue={0} label='Pitch' onChange={(e: any, value: number) => handleSliderChange(value, 'set_pitch')} />
-            </Stack>
-            <Divider sx={{ m: 2 }} />
-            <Typography mx={2} >
-                Satisfied ?
-                <br />
-                ⭐ Rate us on <Link
-                    href={import.meta.env.CHROME ? 'https://chrome.google.com/webstore/detail/oajalfneblkfiejoadecnmodfpnaeblh' : 'https://addons.mozilla.org/en-US/firefox/addon/ms-edge-tts-text-to-speech/'}
-                    target="_blank"
-                >
-                    {import.meta.env.CHROME ? 'Chrome Web Store' : 'Mozilla Addons'}
-                </Link>
-                <br /><br />
-                Not yet ?
-                <br />
-                ✨ Feature request / 🐞 Bug report :👉
-                <IconButton
-                    // sx={{ mx: 0 }}
-                    size='small'
-                    href='https://github.com/yacine-bens/MsEdge-TTS-Extension/issues/new/choose'
-                    target='_blank'
-                >
-                    <GitHub />
-                </IconButton>
-            </Typography>
+            <Typography sx={{ position: 'fixed', top: '6%', left: '50%', transform: 'translate(-50%, -50%)' }} variant='h6'>About</Typography>
+            <Box sx={{ mx: 2, mt: 8 }}>
+                <Typography>
+                    Satisfied ?
+                    <br />
+                    ⭐ Rate us on <Link
+                        href={import.meta.env.CHROME ? 'https://chrome.google.com/webstore/detail/oajalfneblkfiejoadecnmodfpnaeblh' : 'https://addons.mozilla.org/en-US/firefox/addon/ms-edge-tts-text-to-speech/'}
+                        target="_blank"
+                    >
+                        {import.meta.env.CHROME ? 'Chrome Web Store' : 'Mozilla Addons'}
+                    </Link>
+                    <br /><br />
+                    Not yet ?
+                    <br />
+                    ✨ Feature request / 🐞 Bug report :👉
+                    <IconButton
+                        size='small'
+                        href='https://github.com/yacine-bens/MsEdge-TTS-Extension/issues/new/choose'
+                        target='_blank'
+                    >
+                        <GitHub />
+                    </IconButton>
+                </Typography>
+            </Box>
         </Box>
     );
 

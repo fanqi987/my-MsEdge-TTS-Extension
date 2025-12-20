@@ -4,14 +4,13 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 const perBrowserManifest: Record<string, Record<number, UserManifest>> = {
   chrome: {
     3: {
-      version: "1.3.0",
+      version: "1.4.0",
       permissions: [
         "storage",
         "contextMenus",
         "sidePanel",
         "scripting",
         "activeTab",
-        "offscreen",
       ],
       commands: {
         "speak-selection": {
@@ -27,7 +26,7 @@ const perBrowserManifest: Record<string, Record<number, UserManifest>> = {
   },
   firefox: {
     2: {
-      version: "1.3.0",
+      version: "1.4.0",
       permissions: [
         "storage",
         "contextMenus",
@@ -64,7 +63,7 @@ export default defineConfig({
     author: "https://github.com/yacine-bens",
     homepage_url: "https://github.com/yacine-bens/MsEdge-TTS-Extension.git",
     action: {
-      "default_title": "MsEdge TTS"
+      "default_title": "MS Edge TTS"
     },
     ...perBrowserManifest[browser][manifestVersion],
   })
