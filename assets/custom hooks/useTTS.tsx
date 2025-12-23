@@ -4,7 +4,7 @@ const DEFAULT_VOICE = 'en-US-AndrewNeural';
 
 // Cloudflare Worker proxy URL
 // See cloudflare-worker/README.md for deployment instructions
-const PROXY_URL = 'https://msedge-tts-proxy.YOUR_USERNAME.workers.dev';
+const PROXY_URL = 'https://msedge-tts-proxy.284811590.workers.dev';
 
 export default function useTTS() {
     const [audioUrl, setAudioUrl] = useState<string>('');
